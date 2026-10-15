@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIP Monte Carlo Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="page">
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">₹</span>
+      <span class="brand-name">SIP <em>Monte&nbsp;Carlo</em> Planner</span>
+    </div>
+    <p class="tagline">Not one guessed number. A ledger of every future the market might hand you.</p>
+  </header>
+
+  <main>
+
+    <section class="panel input-panel" id="input-panel">
+      <div class="panel-heading">
+        <span class="step-tag">01</span>
+        <h2>Tell it what's real</h2>
+        <p class="muted">Your income, your expenses, the SIP you actually run. Not the version you wish were true.</p>
+      </div>
+
+      <form id="plan-form">
+        <div class="field-grid">
+          <label>
+            <span>Current age</span>
+            <input type="number" id="current_age" value="28" min="18" max="70" required />
+          </label>
+          <label>
+            <span>Target retirement age</span>
+            <input type="number" id="retirement_age" value="55" min="19" max="75" required />
+          </label>
+          <label>
+            <span>Monthly income (₹)</span>
+            <input type="number" id="monthly_income" value="100000" min="0" step="1000" required />
+          </label>
+          <label>
+            <span>Monthly expenses incl. EMIs (₹)</span>
+            <input type="number" id="monthly_expenses" value="60000" min="0" step="1000" required />
+          </label>
+          <label>
+            <span>Current savings / investments (₹)</span>
+            <input type="number" id="current_savings" value="500000" min="0" step="1000" required />
+          </label>
+          <label>
+            <span>Monthly SIP amount (₹)</span>
+            <input type="number" id="monthly_sip" value="20000" min="0" step="500" required />
+          </label>
+        </div>
+
+        <div class="custom-alloc" id="custom-alloc">
+          <div class="custom-alloc-heading">
+            <label class="toggle">
+              <input type="checkbox" id="use-custom" />
+              <span>Add my own allocation to the comparison</span>
+            </label>
+            <span class="muted small">Alongside conservative, balanced &amp; aggressive &mdash; not instead of them.</span>
+          </div>
+
+          <div class="slider-grid" id="slider-grid" hidden>
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Equity</span>
+                <span class="slider-value" id="equity-value">55%</span>
+              </div>
+              <input type="range" id="equity-slider" min="0" max="100" value="55" />
+            </div>
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Gold</span>
+                <span class="slider-value" id="gold-value">10%</span>
+              </div>
+              <input type="range" id="gold-slider" min="0" max="40" value="10" />
+            </div>
+            <div class="slider-row debt-row">
+              <div class="slider-label">
+                <span>Debt / FD (remainder)</span>
+                <span class="slider-value" id="debt-value">35%</span>
+              </div>
+              <div class="debt-bar"><div class="debt-bar-fill" id="debt-bar-fill"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn">Run 2,000 simulations</button>
+        <p class="fine-print">Runs entirely against your own local backend. Nothing leaves this demo.</p>
+      </form>
+    </section>
+
+    <section class="panel results-panel" id="results-panel" hidden>
+
+      <div class="panel-heading">
+        <span class="step-tag">02</span>
+        <h2>The range, not the guess</h2>
+        <p class="muted" id="surplus-line"></p>
+      </div>
+
+      <div class="error-banner" id="error-banner" hidden>
+        <strong>Couldn't run the simulation.</strong>
+        <span id="error-message"></span>
+      </div>
+
+      <div class="skeleton-state" id="skeleton-state" hidden>
+        <div class="skeleton-line skeleton-tabs"></div>
+        <div class="skeleton-block skeleton-chart"></div>
+        <div class="skeleton-line skeleton-row"></div>
+        <div class="skeleton-line skeleton-row"></div>
+        <div class="skeleton-line skeleton-row"></div>
+        <p class="muted skeleton-caption">Running 2,000 simulated futures across every allocation&hellip;</p>
+      </div>
+
+      <div class="results-content" id="results-content">
+        <div class="tabs" id="allocation-tabs" role="tablist"></div>
+
+        <div class="chart-wrap">
+          <canvas id="fan-chart" height="340"></canvas>
+        </div>
+        <ul class="legend">
+          <li><span class="swatch swatch-outer"></span> 5th–95th percentile (1-in-20 to 1-in-20)</li>
+          <li><span class="swatch swatch-inner"></span> 25th–75th percentile</li>
+          <li><span class="swatch swatch-median"></span> Median path</li>
+        </ul>
+
+        <div class="corpus-table-wrap">
+          <h3>Corpus at retirement, by scenario</h3>
+          <table class="corpus-table" id="corpus-table"></table>
+        </div>
+
+        <div class="lever-wrap">
+          <h3>The one lever</h3>
+          <p class="muted">What extra monthly investment does to your median outcome &mdash; same market path, every step, so the comparison is fair.</p>
+          <table class="lever-table" id="lever-table"></table>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="panel history-panel">
+      <div class="panel-heading">
+        <h2>Past runs (this session)</h2>
+      </div>
+      <ul id="history-list" class="history-list">
+        <li class="muted">No runs yet &mdash; your first plan will appear here.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Demo project · Monte Carlo personal-finance simulator · illustrative return assumptions, not investment advice.</p>
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
